@@ -6,6 +6,12 @@ The application allows users to upload a PDF document and ask natural-language q
 
 ---
 
+## 🖥️ Application Preview
+
+![Smart RAG System Demo](smart-rag-demo.png)
+
+---
+
 ## 🚀 Features
 
 - 📤 Upload PDF documents through a Streamlit interface
