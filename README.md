@@ -6,6 +6,10 @@ The application allows users to upload a PDF document and ask natural-language q
 
 ---
 
+## 🚀 Live Demo
+
+👉 [Try the Smart RAG System](https://bhavishya-smart-rag.streamlit.app)
+
 ## 🖥️ Application Preview
 
 ![Smart RAG System Demo](smart-rag-demo.png)
