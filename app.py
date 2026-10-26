@@ -6,6 +6,7 @@ import faiss
 import re
 import tempfile
 import numpy as np
+import time
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -105,14 +106,26 @@ USER QUESTION:
 ANSWER:
 """
 
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=prompt
+max_retries = 3
+response = None
+
+for attempt in range(max_retries):
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=prompt
+        )
+        break
+
+    except Exception as e:
+        if attempt < max_retries - 1:
+            time.sleep(2)
+        else:
+            st.warning(
+                "The AI service is temporarily busy. "
+                "Please try your question again in a moment."
             )
 
-            st.markdown("### AI Generated Answer")
-            st.write(response.text)
-
-        except Exception as e:
-            st.error(f"Gemini API error: {e}")
+if response is not None:
+    st.markdown("### AI Generated Answer")
+    st.write(response.text)
