@@ -1,11 +1,13 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 import streamlit as st
 from pypdf import PdfReader
+from google import genai
 import faiss
 import re
 import tempfile
 import numpy as np
 
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 st.set_page_config(page_title="Smart RAG System", layout="wide")
 st.title("Smart RAG (Clean Retrieval System)")
@@ -65,24 +67,52 @@ if query:
     if "index" not in st.session_state:
         st.warning("Please upload a PDF first.")
     else:
-        q_vec = st.session_state.vectorizer.transform([query]).toarray().astype("float32")
+        q_vec = st.session_state.vectorizer.transform(
+            [query]
+        ).toarray().astype("float32")
 
         D, I = st.session_state.index.search(q_vec, k=3)
 
         st.markdown("### Relevant Policy Sections")
 
         results = []
+
         for idx in I[0]:
             results.append(st.session_state.chunks[idx])
 
         for r in results:
             st.success(r)
 
-        answer = f"""Based on the policy document:
+        # Combine retrieved sections into context
+        context = "\n\n".join(results)
 
-{results[0]}
+        # Send retrieved context + question to Gemini
+        prompt = f"""
+You are a document question-answering assistant.
 
-This section best answers your question:
+Answer the user's question using only the information provided
+in the document context below.
+
+If the answer is not available in the context, clearly say:
+"I could not find this information in the document."
+
+DOCUMENT CONTEXT:
+{context}
+
+USER QUESTION:
 {query}
+
+ANSWER:
 """
-        st.write(answer)
+
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt
+            )
+
+            st.markdown("### AI Generated Answer")
+            st.write(response.text)
+
+        except Exception as e:
+            st.error(f"Gemini API error: {e}")
